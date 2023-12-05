@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     env,
     fs::File,
     io::{BufRead, BufReader},
@@ -16,7 +15,7 @@ struct Card {
 fn main() {
     let mut part1_result = 0;
     let mut cards: Vec<Card> = vec![];
-    let input_path = env::var("aoc_2023_04_path").unwrap() + "/example.txt";
+    let input_path = env::var("aoc_2023_04_path").unwrap() + "/input.txt";
     let input_file = File::open(input_path).unwrap();
     let reader = BufReader::new(input_file);
     for (i, line) in reader.lines().enumerate() {
@@ -27,8 +26,9 @@ fn main() {
         part1_result += card_points;
     }
     // println!("{:?}", cards);
-    let part2 = calculate_points_with_copies(cards);
-    println!("{}", part2)
+    let part2_result = calculate_points_with_copies(cards);
+    println!("part1 result:{}", part1_result);
+    println!("part2 result:{}", part2_result)
 }
 fn parse_line_to_card(line: String, card_id: usize) -> Card {
     let mut card = Card {
@@ -85,39 +85,24 @@ fn card_matches(card: &Card) -> usize {
     return count;
 }
 fn calculate_points_with_copies(cards: Vec<Card>) -> usize {
-    let mut res = 0;
-    let mut copies_v: HashMap<usize, usize> = HashMap::new();
+    let mut result = 0;
+    let mut copies_ar: Vec<usize> = Vec::with_capacity(cards.len());
+    for _ in 0..cards.len() {
+        copies_ar.push(0);
+    }
     for card in cards {
-        res += 1;
-        let cop = copies_v.get(&card.id);
-        match cop {
-            Some(n) => {
-                for _ in 0..*n {
-                    for i in 1..card.matches_count + 1 {
-                        if copies_v.contains_key(&(card.id + i)) {
-                            let v = copies_v.get_mut(&(card.id + i)).unwrap();
-                            *v += 1;
-                            res += 1;
-                        } else {
-                            copies_v.insert(card.id + i, 1);
-                            res += 1;
-                        }
-                    }
-                }
-            }
-            None => {}
-        };
-        for i in 1..card.matches_count + 1 {
-            if copies_v.contains_key(&(card.id + i)) {
-                let v = copies_v.get_mut(&(card.id + i)).unwrap();
-                *v += 1;
-                res += 1;
-            } else {
-                copies_v.insert(card.id + i, 1);
-                res += 1;
+        result += 1;
+        let copies_count = copies_ar.get(card.id - 1).unwrap();
+        for _ in 0..*copies_count {
+            for i in 1..card.matches_count + 1 {
+                copies_ar[card.id - 1 + i] += 1;
+                result += 1;
             }
         }
+        for i in 1..card.matches_count + 1 {
+            copies_ar[card.id - 1 + i] += 1;
+            result += 1;
+        }
     }
-    println!("{:?}", copies_v);
-    return res;
+    return result;
 }
